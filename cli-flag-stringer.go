@@ -42,7 +42,7 @@ type FlagStringer interface {
 	Make() cli.FlagStringFunc
 }
 
-type cFlagStringer struct {
+type cMakeFlagStringer struct {
 	pruneEnvVars      bool
 	pruneDefaults     bool
 	pruneDefaultBools bool
@@ -52,96 +52,120 @@ type cFlagStringer struct {
 // NewFlagStringer creates a new FlagStringer instance, ready to be configured
 // and made into a cli.FlagStringFunc
 func NewFlagStringer() FlagStringer {
-	return &cFlagStringer{}
+	return &cMakeFlagStringer{}
 }
 
-func (f *cFlagStringer) PruneEnvVars(enable bool) FlagStringer {
+func (f *cMakeFlagStringer) PruneEnvVars(enable bool) FlagStringer {
 	f.pruneEnvVars = enable
 	return f
 }
 
-func (f *cFlagStringer) PruneDefaults(enable bool) FlagStringer {
+func (f *cMakeFlagStringer) PruneDefaults(enable bool) FlagStringer {
 	f.pruneDefaults = enable
 	return f
 }
 
-func (f *cFlagStringer) PruneDefaultBools(enable bool) FlagStringer {
+func (f *cMakeFlagStringer) PruneDefaultBools(enable bool) FlagStringer {
 	f.pruneDefaultBools = enable
 	return f
 }
 
-func (f *cFlagStringer) DetailsOnNewLines(enable bool) FlagStringer {
+func (f *cMakeFlagStringer) DetailsOnNewLines(enable bool) FlagStringer {
 	f.detailsOnNewLines = enable
 	return f
 }
 
-func (f *cFlagStringer) Make() cli.FlagStringFunc {
-	fs := &CFlagStringer{
+func (f *cMakeFlagStringer) Make() cli.FlagStringFunc {
+	fs := &cFlagStringer{
 		cfg: f,
 	}
 	return fs.Stringer
 }
 
-type CFlagStringer struct {
-	cfg *cFlagStringer
+type cFlagStringer struct {
+	cfg *cMakeFlagStringer
 }
 
-func (s CFlagStringer) Stringer(flag cli.Flag) (usage string) {
+func (s cFlagStringer) pruneEnvVars(usage string) (pruned string) {
+	pruned = usage
+	if b, _, a, found := slices.Carve([]rune(pruned), []rune("[$"), []rune("]")); found {
+		if pruned = string(b); string(a) != "" {
+			pruned += " " + string(a)
+		}
+	}
+	return
+}
+
+func (s cFlagStringer) pruneDefaults(usage string) (pruned string) {
+	pruned = usage
+	if b, _, a, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune(")")); found {
+		before, after := string(b), string(a)
+		if bLast := len(before) - 1; bLast >= 0 && before[bLast] == ' ' {
+			if after != "" && after[0] == ' ' {
+				pruned = before + after[1:]
+			} else {
+				pruned = before + after
+			}
+		} else {
+			pruned = before + after
+		}
+	}
+	return
+}
+
+func (s cFlagStringer) pruneDefaultBools(usage string) (pruned string) {
+	pruned = usage
+	if b, _, _, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune("false)")); found {
+		pruned = string(b)
+	}
+	if b, _, _, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune("true)")); found {
+		pruned = string(b)
+	}
+	return
+}
+
+func (s cFlagStringer) detailsOnNewLines(usage string) (pruned string) {
+	pruned = usage
+	var message, defaults, variables string
+	if b, _, found := strings.Cut(pruned, "(default: "); found {
+		message = b
+	} else if b, _, found := strings.Cut(pruned, "[$"); found {
+		message = b
+	}
+	if message != "" {
+		if _, m, _, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune(")")); found {
+			defaults = "(default: " + string(m) + ")"
+		}
+		if _, m, _, found := slices.Carve([]rune(pruned), []rune("[$"), []rune("]")); found {
+			variables = "[$" + string(m) + "]"
+		}
+		pruned = message
+		if defaults != "" {
+			pruned += "\n\t  " + defaults
+		}
+		if variables != "" {
+			pruned += "\n\t  " + variables
+		}
+	}
+	return
+}
+
+func (s cFlagStringer) Stringer(flag cli.Flag) (usage string) {
 	usage = origFlagStringer(flag)
 
 	if s.cfg.pruneEnvVars {
-		if b, _, a, found := slices.Carve([]rune(usage), []rune("[$"), []rune("]")); found {
-			if usage = string(b); string(a) != "" {
-				usage += " " + string(a)
-			}
-		}
+		usage = s.pruneEnvVars(usage)
 	}
 
 	if s.cfg.pruneDefaults {
-		if b, _, a, found := slices.Carve([]rune(usage), []rune("(default: "), []rune(")")); found {
-			before, after := string(b), string(a)
-			if bLast := len(before) - 1; bLast >= 0 && before[bLast] == ' ' {
-				if after != "" && after[0] == ' ' {
-					usage = before + after[1:]
-				} else {
-					usage = before + after
-				}
-			} else {
-				usage = before + after
-			}
-		}
+		usage = s.pruneDefaults(usage)
 	} else if s.cfg.pruneDefaultBools {
-		if b, _, _, found := slices.Carve([]rune(usage), []rune("(default: "), []rune("false)")); found {
-			usage = string(b)
-		}
-		if b, _, _, found := slices.Carve([]rune(usage), []rune("(default: "), []rune("true)")); found {
-			usage = string(b)
-		}
+		usage = s.pruneDefaultBools(usage)
 	}
 
 	if s.cfg.detailsOnNewLines {
 		// <text> (default: blah) [$...]
-		var message, defaults, variables string
-		if b, _, found := strings.Cut(usage, "(default: "); found {
-			message = b
-		} else if b, _, found := strings.Cut(usage, "[$"); found {
-			message = b
-		}
-		if message != "" {
-			if _, m, _, found := slices.Carve([]rune(usage), []rune("(default: "), []rune(")")); found {
-				defaults = "(default: " + string(m) + ")"
-			}
-			if _, m, _, found := slices.Carve([]rune(usage), []rune("[$"), []rune("]")); found {
-				variables = "[$" + string(m) + "]"
-			}
-			usage = message
-			if defaults != "" {
-				usage += "\n\t  " + defaults
-			}
-			if variables != "" {
-				usage += "\n\t  " + variables
-			}
-		}
+		usage = s.detailsOnNewLines(usage)
 	}
 
 	return
