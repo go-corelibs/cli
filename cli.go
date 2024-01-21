@@ -20,6 +20,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+//gocyclo:ignore
 func ClearEmptyCategories(flags []cli.Flag) {
 	// this function is not easily maintained, needs upstream fix
 	// see: https://github.com/urfave/cli/issues/1860
@@ -27,72 +28,46 @@ func ClearEmptyCategories(flags []cli.Flag) {
 	cats := make(map[string][]int)
 	visible := make(map[string][]int)
 
+	update := func(category string, idx int, hidden bool) {
+		if cats[category] = append(cats[category], idx); !hidden {
+			visible[category] = append(visible[category], idx)
+		}
+	}
+
 	for idx, flag := range flags {
 		switch t := flag.(type) {
 		case *cli.DurationFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.Float64Flag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.Float64SliceFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.GenericFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.Int64Flag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.Int64SliceFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.IntFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.IntSliceFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.PathFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.StringFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.StringSliceFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.TimestampFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.Uint64Flag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.Uint64SliceFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.UintFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		case *cli.UintSliceFlag:
-			if cats[t.Category] = append(cats[t.Category], idx); !t.Hidden {
-				visible[t.Category] = append(visible[t.Category], idx)
-			}
+			update(t.Category, idx, t.Hidden)
 		default:
 		}
 	}
