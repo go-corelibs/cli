@@ -88,9 +88,9 @@ type cFlagStringer struct {
 
 func (s cFlagStringer) pruneEnvVars(usage string) (pruned string) {
 	pruned = usage
-	if b, _, a, found := slices.Carve([]rune(pruned), []rune("[$"), []rune("]")); found {
-		if pruned = string(b); string(a) != "" {
-			pruned += " " + string(a)
+	if b, _, a, found := slices.CarveString(pruned, "[$", "]"); found {
+		if pruned = b; a != "" {
+			pruned += " " + a
 		}
 	}
 	return
@@ -98,8 +98,8 @@ func (s cFlagStringer) pruneEnvVars(usage string) (pruned string) {
 
 func (s cFlagStringer) pruneDefaults(usage string) (pruned string) {
 	pruned = usage
-	if b, _, a, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune(")")); found {
-		before, after := string(b), string(a)
+	if b, _, a, found := slices.CarveString(pruned, "(default: ", ")"); found {
+		before, after := b, a
 		if bLast := len(before) - 1; bLast >= 0 && before[bLast] == ' ' {
 			if after != "" && after[0] == ' ' {
 				pruned = before + after[1:]
@@ -115,11 +115,11 @@ func (s cFlagStringer) pruneDefaults(usage string) (pruned string) {
 
 func (s cFlagStringer) pruneDefaultBools(usage string) (pruned string) {
 	pruned = usage
-	if b, _, _, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune("false)")); found {
-		pruned = string(b)
+	if b, _, _, found := slices.CarveString(pruned, "(default: ", "false)"); found {
+		pruned = b
 	}
-	if b, _, _, found := slices.Carve([]rune(pruned), []rune("(default: "), []rune("true)")); found {
-		pruned = string(b)
+	if b, _, _, found := slices.CarveString(pruned, "(default: ", "true)"); found {
+		pruned = b
 	}
 	return
 }
@@ -127,9 +127,9 @@ func (s cFlagStringer) pruneDefaultBools(usage string) (pruned string) {
 func (s cFlagStringer) detailsOnNewLines(usage string) (pruned string) {
 	pruned = usage
 	var message, defaults, variables string
-	if b, _, found := strings.Cut(pruned, "(default: "); found {
-		message = b
-	} else if b, _, found := strings.Cut(pruned, "[$"); found {
+	if before, _, found := strings.Cut(pruned, "(default: "); found {
+		message = before
+	} else if b, _, ok := strings.Cut(pruned, "[$"); ok {
 		message = b
 	}
 	if message != "" {
