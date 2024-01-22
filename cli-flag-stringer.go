@@ -35,6 +35,8 @@ type FlagStringer interface {
 	PruneDefaults(enable bool) FlagStringer
 	// PruneDefaultBools specifies if only boolean flag defaults are removed
 	PruneDefaultBools(enable bool) FlagStringer
+	// PruneRepeats specifies if slice flags have their repeated example removed
+	PruneRepeats(enable bool) FlagStringer
 	// DetailsOnNewLines specifies if defaults and env vars are places on new
 	// lines instead of all in one line
 	DetailsOnNewLines(enable bool) FlagStringer
@@ -46,6 +48,7 @@ type cMakeFlagStringer struct {
 	pruneEnvVars      bool
 	pruneDefaults     bool
 	pruneDefaultBools bool
+	pruneRepeats      bool
 	detailsOnNewLines bool
 }
 
@@ -67,6 +70,11 @@ func (f *cMakeFlagStringer) PruneDefaults(enable bool) FlagStringer {
 
 func (f *cMakeFlagStringer) PruneDefaultBools(enable bool) FlagStringer {
 	f.pruneDefaultBools = enable
+	return f
+}
+
+func (f *cMakeFlagStringer) PruneRepeats(enable bool) FlagStringer {
+	f.pruneRepeats = enable
 	return f
 }
 
@@ -124,6 +132,14 @@ func (s cFlagStringer) pruneDefaultBools(usage string) (pruned string) {
 	return
 }
 
+func (s cFlagStringer) pruneRepeats(usage string) (pruned string) {
+	pruned = usage
+	if before, _, after, found := slices.CarveString(pruned, " [ -", " ]"); found {
+		pruned = before + after
+	}
+	return
+}
+
 func (s cFlagStringer) detailsOnNewLines(usage string) (pruned string) {
 	pruned = usage
 	var message, defaults, variables string
@@ -152,6 +168,10 @@ func (s cFlagStringer) detailsOnNewLines(usage string) (pruned string) {
 
 func (s cFlagStringer) Stringer(flag cli.Flag) (usage string) {
 	usage = origFlagStringer(flag)
+
+	if s.cfg.pruneRepeats {
+		usage = s.pruneRepeats(usage)
+	}
 
 	if s.cfg.pruneEnvVars {
 		usage = s.pruneEnvVars(usage)
