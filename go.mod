@@ -3,7 +3,7 @@ module github.com/go-corelibs/cli
 go 1.21.5
 
 require (
-	github.com/go-corelibs/slices v1.2.0
+	github.com/go-corelibs/slices v1.3.0
 	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 )
