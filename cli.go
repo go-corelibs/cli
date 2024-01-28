@@ -44,6 +44,8 @@ func ClearEmptyCategories(flags []cli.Flag) {
 		if len(visible[category]) == 0 {
 			for _, idx := range cats[category] {
 				switch t := flags[idx].(type) {
+				case *cli.BoolFlag:
+					t.Category = ""
 				case *cli.DurationFlag:
 					t.Category = ""
 				case *cli.Float64Flag:
