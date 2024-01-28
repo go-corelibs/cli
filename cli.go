@@ -35,40 +35,8 @@ func ClearEmptyCategories(flags []cli.Flag) {
 	}
 
 	for idx, flag := range flags {
-		switch t := flag.(type) {
-		case *cli.DurationFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.Float64Flag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.Float64SliceFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.GenericFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.Int64Flag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.Int64SliceFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.IntFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.IntSliceFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.PathFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.StringFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.StringSliceFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.TimestampFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.Uint64Flag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.Uint64SliceFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.UintFlag:
-			update(t.Category, idx, t.Hidden)
-		case *cli.UintSliceFlag:
-			update(t.Category, idx, t.Hidden)
-		default:
+		if b := DecodeBaseFlag(flag); b != nil {
+			update(b.Category, idx, b.Hidden)
 		}
 	}
 
