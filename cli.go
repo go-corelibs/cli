@@ -20,6 +20,9 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+// ClearEmptyCategories sets all flag.Category strings to empty if the
+// specific category does not have any visible flags
+//
 //gocyclo:ignore
 func ClearEmptyCategories(flags []cli.Flag) {
 	// this function is not easily maintained, needs upstream fix
