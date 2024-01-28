@@ -65,10 +65,11 @@ func ShowUsage(ctx *cli.Context) {
 	message := "usage: "
 	if ctx.App.UsageText != "" {
 		message += ctx.App.UsageText
+	} else if len(ctx.App.Commands) > 0 {
+		message += ctx.App.Name + " [options] [command] [args...]"
 	} else {
 		message += ctx.App.Name + " [options] [args...]"
 	}
-	message += "\nuse -h or --help for more details"
 	_, _ = fmt.Fprintln(os.Stderr, message)
 }
 
