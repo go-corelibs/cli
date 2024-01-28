@@ -39,6 +39,30 @@ func (b *BaseFlag) Original() (f cli.Flag) {
 	return
 }
 
+// NameWithAliases returns the flag name and any aliases, with leading dashes
+func (b *BaseFlag) NameWithAliases() (name string) {
+	if len(b.Name) == 1 {
+		name = "-" + b.Name
+	} else {
+		name = "--" + b.Name
+	}
+	if len(b.Aliases) > 0 {
+		name += " ("
+		for idx, alias := range b.Aliases {
+			if idx > 0 {
+				name += ", "
+			}
+			if len(alias) == 1 {
+				name += "-" + alias
+			} else {
+				name += "--" + alias
+			}
+		}
+		name += ")"
+	}
+	return
+}
+
 // NewBaseFlag constructs a new BaseFlag instance
 func NewBaseFlag(name, category, defaultText, usage string, required, hidden bool, aliases, envVars []string, original cli.Flag) *BaseFlag {
 	return &BaseFlag{
