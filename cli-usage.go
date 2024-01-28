@@ -35,26 +35,11 @@ func ShowOptions(ctx *cli.Context) {
 			if b = DecodeBaseFlag(f); b == nil || b.Hidden {
 				continue
 			}
-			var line string
-			if len(b.Name) == 1 {
-				line += "-" + b.Name
-			} else {
-				line += "--" + b.Name
-			}
-			if len(b.Aliases) > 0 {
-				for _, alias := range b.Aliases {
-					if len(alias) == 1 {
-						line += ", -" + alias
-					} else {
-						line += ", --" + alias
-					}
-				}
-			}
 			switch b.Name {
 			case "usage", "help", "version", "verbose":
-				after = append(after, line)
+				after = append(after, b.NameWithAliases())
 			default:
-				before = append(before, line)
+				before = append(before, b.NameWithAliases())
 			}
 		}
 		if len(before) > 0 {
